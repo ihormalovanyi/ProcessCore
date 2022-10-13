@@ -70,6 +70,10 @@ open class Process<State: ProcessState, Activity: ProcessActivity>: NSObject {
         }
     }
     
+    public subscript<T>(_ keyPath: KeyPath<State, T>) -> T {
+        state[keyPath: keyPath]
+    }
+    
     //MARK: - Internal methods
     
     func didStart(_ activity: Activity) {
