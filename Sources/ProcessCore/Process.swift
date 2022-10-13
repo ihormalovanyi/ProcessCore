@@ -177,7 +177,7 @@ public extension Process {
     ///- Parameters:
     ///     - object: The object to register for process activity listening.
     ///     - activityHandler: The handler receives the new activity event.
-    func addActiviryListener(_ object: AnyObject, _ activityHandler: @escaping (Event) -> ()) {
+    func addActivityListener(_ object: AnyObject, _ activityHandler: @escaping (Event) -> ()) {
         let listener = activityListenersMap.object(forKey: object) ?? ActivityListener()
         listener.handler = activityHandler
         activityListenersMap.setObject(listener, forKey: object)
