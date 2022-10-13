@@ -2,7 +2,7 @@
 Pod::Spec.new do |spec|
 
   spec.name         = "ProcessCore"
-  spec.version      = "0.5.0"
+  spec.version      = "0.5.1"
   spec.summary      = "A ProcessCore framework written in Swift"
 
   spec.description  = <<-DESC
@@ -18,7 +18,7 @@ This library helps you build the active module domain logic.
   spec.ios.deployment_target = "13.0"
   spec.swift_version = "5.7"
 
-  spec.source        = { :git => "https://github.com/multimediasuite/ProcessCore.git", :tag => "0.5.0" }
+  spec.source        = { :git => "https://github.com/multimediasuite/ProcessCore.git", :tag => "0.5.1" }
   spec.source_files  = "ProcessCore/**/*.{h,m,swift}"
 
 end
