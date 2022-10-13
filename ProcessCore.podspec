@@ -19,6 +19,6 @@ This library helps you build the active module domain logic.
   spec.swift_version = "5.7"
 
   spec.source        = { :git => "https://github.com/multimediasuite/ProcessCore.git", :tag => "0.5.1" }
-  spec.source_files  = "ProcessCore/**/*.{h,m,swift}"
+  spec.source_files  = "Sources/**/*.{h,m,swift}"
 
 end
