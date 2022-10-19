@@ -33,6 +33,8 @@ open class Process<State: ProcessState, Activity: ProcessActivity>: NSObject {
         (activityListenersMap.objectEnumerator()?.allObjects as? [ActivityListener]) ?? []
     }
     
+//    lazy var queue = DispatchQueue(label: "pro.ihor.processqueue:\(type(of: self))")
+    
     public var waiting: Bool { runActivities.isEmpty }
     public var runningActivities: Set<Activity> { Set(runActivities.keys) }
     
@@ -79,23 +81,27 @@ open class Process<State: ProcessState, Activity: ProcessActivity>: NSObject {
     //MARK: - Internal methods
     
     func didStart(_ activity: Activity) {
-        if runActivities[activity, default: 0] == 0 {
+        recurciveLock.lock()
+        
+        if !runningActivities.contains(activity) {
             commitActivity(.didStart(activity))
         }
         
-        recurciveLock.lock()
         runActivities[activity, default: 0] += 1
+        
         recurciveLock.unlock()
     }
     
     func didFinish(_ activity: Activity) {
         recurciveLock.lock()
+        
         runActivities[activity, default: 0] -= 1
-        recurciveLock.unlock()
-
-        if runActivities[activity, default: 0] == 0 {
+        
+        if !runningActivities.contains(activity) {
             commitActivity(.didFinish(activity))
         }
+        
+        recurciveLock.unlock()
     }
     
     func commitActivity(_ event: Event) {
