@@ -97,7 +97,7 @@ open class Process<State: ProcessState, Activity: ProcessActivity>: NSObject {
         
         runActivities[activity, default: 0] -= 1
         
-        if !runningActivities.contains(activity) {
+        if runActivities[activity] == 0 {
             runActivities[activity] = nil
             commitActivity(.didFinish(activity))
         }
