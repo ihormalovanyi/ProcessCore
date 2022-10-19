@@ -26,13 +26,15 @@ open class Process<State: ProcessState, Activity: ProcessActivity>: NSObject {
     var recurciveLock: NSRecursiveLock = NSRecursiveLock()
     var runActivities: [Activity : UInt] = [:]
     var activityListenersMap: NSMapTable<AnyObject, ActivityListener> = .weakToStrongObjects()
-    var a: NSHashTable<AnyObject> = .weakObjects()
     var stateListenersMap: Dictionary<AnyKeyPath, NSMapTable<AnyObject, AnyStateListener>> = [:]
     var stateListenersObservations: [AnyKeyPath : NSKeyValueObservation] = [:]
     var state: State = .entry
     var allActivityListeners: [ActivityListener] {
         (activityListenersMap.objectEnumerator()?.allObjects as? [ActivityListener]) ?? []
     }
+    
+    public var waiting: Bool { runActivities.isEmpty }
+    public var runningActivities: Set<Activity> { Set(runActivities.keys) }
     
     //MARK: - Lifecycle
     
