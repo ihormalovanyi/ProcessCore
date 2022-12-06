@@ -92,14 +92,14 @@ open class Process<State: ProcessState, Activity: ProcessActivity>: NSObject {
         recurciveLock.unlock()
     }
     
-    func didFinish(_ activity: Activity) {
+    func didFinish(_ activity: Activity, error: Error?) {
         recurciveLock.lock()
         
         runActivities[activity, default: 0] -= 1
         
         if runActivities[activity] == 0 {
             runActivities[activity] = nil
-            commitActivity(.didFinish(activity))
+            commitActivity(.didFinish(activity, error: error))
         }
         
         recurciveLock.unlock()
@@ -126,17 +126,17 @@ open class Process<State: ProcessState, Activity: ProcessActivity>: NSObject {
         case didStart(Activity)
         
         ///Notifies all process activity listeners that the specified activity has finished running.
-        case didFinish(Activity)
+        case didFinish(Activity, error: Error?)
+//        case didFinish(Activity)
         
         ///Notifies all process activity listeners that an error was received when the specified activity is running.
-        case receivedError(Activity, Error?)
+//        case receivedError(Activity, Error?)
         
         ///The event's activity.
         public var activity: Activity {
             switch self {
             case .didStart(let activity),
-                    .didFinish(let activity),
-                    .receivedError(let activity, _):
+                    .didFinish(let activity, _):
                 return activity
             }
         }
@@ -152,7 +152,7 @@ open class Process<State: ProcessState, Activity: ProcessActivity>: NSObject {
         
         ///The event's error.
         public var error: Error? {
-            if case .receivedError(_, let error) = self {
+            if case .didFinish(_, let error) = self {
                 return error
             }
             
@@ -254,11 +254,11 @@ public extension Process {
         do {
             try await work()
             completion?(true)
+            didFinish(activity, error: nil)
         } catch {
-            commitActivity(.receivedError(activity, error))
+            didFinish(activity, error: error)
             completion?(false)
         }
-        didFinish(activity)
     }
     
     ///Performs a block of code and catches possible errors.
@@ -308,10 +308,10 @@ public extension Process {
             let _ = try await withUnsafeThrowingContinuation { continuation in
                 work(continuation)
             }
+            didFinish(activity, error: nil)
         } catch {
-            commitActivity(.receivedError(activity, error))
+            didFinish(activity, error: error)
         }
-        didFinish(activity)
     }
     
 }
