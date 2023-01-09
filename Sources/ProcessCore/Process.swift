@@ -26,8 +26,7 @@ open class Process<State: ProcessState, Activity: ProcessActivity>: NSObject {
     var recurciveLock: NSRecursiveLock = NSRecursiveLock()
     var runActivities: [Activity : UInt] = [:]
     var activityListenersMap: NSMapTable<AnyObject, ActivityListener> = .weakToStrongObjects()
-    var stateListenersMap: Dictionary<AnyKeyPath, NSMapTable<AnyObject, AnyStateListener>> = [:]
-    var stateListenersObservations: [AnyKeyPath : NSKeyValueObservation] = [:]
+    var stateListenersMap: NSMapTable<AnyKeyPath, NSMapTable<AnyObject, AnyStateListener>> = .weakToWeakObjects()
     var state: State = .entry
     var allActivityListeners: [ActivityListener] {
         (activityListenersMap.objectEnumerator()?.allObjects as? [ActivityListener]) ?? []
@@ -47,7 +46,7 @@ open class Process<State: ProcessState, Activity: ProcessActivity>: NSObject {
     
     deinit {
         activityListenersMap.removeAllObjects()
-        stateListenersMap = [:]
+        stateListenersMap.removeAllObjects()
     }
     
     //MARK: - State access
@@ -114,7 +113,7 @@ open class Process<State: ProcessState, Activity: ProcessActivity>: NSObject {
     }
     
     func allStateListeners<T>(for keyPath: KeyPath<State, T>) -> [StateListener<T>] {
-        stateListenersMap[keyPath]?.objectEnumerator()?.allObjects.compactMap { $0 as? StateListener<T> } ?? []
+        stateListenersMap.object(forKey: keyPath)?.objectEnumerator()?.allObjects.compactMap { $0 as? StateListener<T> } ?? []
     }
     
     //MARK: - Addition entities
@@ -212,14 +211,14 @@ public extension Process {
     ///     - stateKeyPath: The key path, relative to the state property updating.
     ///     - updateHandler: The handler receives the new state value that it is observing.
     func addStateListener<T>(_ object: AnyObject, for stateKeyPath: KeyPath<State, T>, updateHandler: @escaping (T) -> ()) {
-        if stateListenersMap[stateKeyPath] == nil {
-            stateListenersMap[stateKeyPath] = .weakToStrongObjects()
+        if stateListenersMap.object(forKey: stateKeyPath) == nil {
+            stateListenersMap.setObject(.weakToWeakObjects(), forKey: stateKeyPath)
         }
         
         let stateListener = StateListener<T>()
         stateListener.handler = updateHandler
        
-        stateListenersMap[stateKeyPath]?.setObject(stateListener, forKey: object)
+        stateListenersMap.object(forKey: stateKeyPath)?.setObject(stateListener, forKey: object)
     }
     
     
@@ -229,9 +228,9 @@ public extension Process {
     ///     - object: The object to remove as an state listener.
     ///     - keyPath: A key-path, relative to the state property.
     func removeStateListener<T>(_ object: AnyObject, for stateKeyPath: KeyPath<State, T>) {
-        stateListenersMap[stateKeyPath]?.removeObject(forKey: object)
-        if stateListenersMap[stateKeyPath]?.count == 0 {
-            stateListenersMap[stateKeyPath] = nil
+        stateListenersMap.object(forKey: stateKeyPath)?.removeObject(forKey: object)
+        if stateListenersMap.object(forKey: stateKeyPath)?.count == 0 {
+            stateListenersMap.removeObject(forKey: stateKeyPath)
         }
     }
     
